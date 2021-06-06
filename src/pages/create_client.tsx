@@ -1,12 +1,12 @@
 import { FormHandles } from "@unform/core";
 import { Form } from "@unform/web"
 import { GetServerSideProps } from "next"
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import * as Yup from 'yup';
 import Input from "../components/Input";
 import { MdAdd, MdExpandMore, MdRemove } from 'react-icons/md'
 
-import { Container, Content, AddressContainer, HiddenAddress } from '../styles/pages/create_client'
+import { Container, Content, AddressContainer, AddressesContent, HiddenAddress } from '../styles/pages/create_client'
 import getValidationErrors from "../utils/getValidationErrors";
 import { CheckBox } from "../components/CheckBox";
 import api from "../services/api";
@@ -36,6 +36,11 @@ interface ClientData {
   addresses: Address[];
 }
 
+interface ICepState {
+  value: string;
+  index: number;
+}
+
 export default function Dashboard() {
   const resetedAddress = {
     id: Math.random() * 10,
@@ -52,7 +57,7 @@ export default function Dashboard() {
   }
 
   const [addresses, setAddresses] = useState<Address[]>([resetedAddress])
-  const [cepValue, setCepValue] = useState('')
+  const [cepState, setCepState] = useState<ICepState>()
   const [isCepFinded, setIsCepFinded] = useState(false)
 
   const handleAddAddress = useCallback(() => {
@@ -95,13 +100,9 @@ export default function Dashboard() {
   const formRef = useRef<FormHandles>(null);
 
   const handleSubmit = useCallback(
-    async ({ name, cpf, telephone, email }: ClientData) => {
+    async ({ name, cpf, telephone, email, addresses }) => {
       try {
         formRef.current?.setErrors({});
-
-        const formatData = ({ id, isActive, ...rest }: Address) => rest
-
-        const formattedAddresses = addresses.map(address => formatData(address))
 
 
         const formattedData = {
@@ -109,8 +110,10 @@ export default function Dashboard() {
           cpf,
           telephone,
           email,
-          addresses: formattedAddresses
+          addresses: addresses
         }
+
+        console.log(formattedData)
 
         const schema = Yup.object().shape({
           email: Yup.string()
@@ -162,15 +165,28 @@ export default function Dashboard() {
     [addresses],
   );
 
+  const changeCepValue = useCallback((cep: ICepState) => {
+    if (cep.value.length < 8) {
+      return;
+    }
+
+    setCepState(cep)
+  }, [cepState])
+
   useEffect(() => {
-    if(cepValue.includes('_') || cepValue === '') {
+    if (!cepState) {
+      return;
+    }
+
+    if (cepState.value.includes('_') || cepState.value === '') {
       return;
     }
 
     async function searchCep(): Promise<void> {
       try {
         const checkAddress = addresses.find(address => address.isActive === true)
-        const res = await cep(String(checkAddress.cep), { timeout: 200, providers: ['brasilapi'] });
+        const res = await cep(String(cepState.value), { timeout: 200, providers: ['brasilapi'] });
+        const formData = formRef.current.getData()
 
         if (res) {
           const addressWithResponse = {
@@ -181,7 +197,14 @@ export default function Dashboard() {
             road: res.street
           }
 
+
+
           setAddresses(addresses.map(address => address.id === checkAddress.id ? addressWithResponse : address))
+          formRef.current.setFieldValue(`addresses[${cepState.index}].state`, res.state)
+          formRef.current.setFieldValue(`addresses[${cepState.index}].road`, res.street)
+          formRef.current.setFieldValue(`addresses[${cepState.index}].city`, res.city)
+          formRef.current.setFieldValue(`addresses[${cepState.index}].district`, res.neighborhood)
+
           setIsCepFinded(true)
         }
       } catch (err) {
@@ -199,7 +222,7 @@ export default function Dashboard() {
     };
 
     searchCep()
-  }, [cepValue])
+  }, [cepState])
 
   return (
 
@@ -215,115 +238,68 @@ export default function Dashboard() {
           <Input name="email" placeholder="E-mail" />
           <AddressContainer>
             {addresses.map((address, index) => (
-              <div key={address.id}>
-                {address.isActive ? (
-                  <>
-                    <InputWithMask
-                      mask="99999-999"
-                      name={`addresses[${index}].cep`}
-                      placeholder="CEP"
-                      value={address.cep}
-                      onChange={e => {
-                        address.cep = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                        setCepValue(e.target.value)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].state`}
-                      placeholder="Estado"
-                      setIsCepFinded={setIsCepFinded}
-                      isCepFinded={isCepFinded}
-                      value={address.state}
-                      onChange={e => {
-                        address.state = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].city`}
-                      placeholder="Cidade"
-                      setIsCepFinded={setIsCepFinded}
-                      isCepFinded={isCepFinded}
-                      value={address.city}
-                      onChange={e => {
-                        address.city = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].district`}
-                      placeholder="Bairro"
-                      setIsCepFinded={setIsCepFinded}
-                      isCepFinded={isCepFinded}
-                      value={address.district}
-                      onChange={e => {
-                        address.district = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].road`}
-                      placeholder="Rua(Logradouro)"
-                      isCepFinded={isCepFinded}
-                      setIsCepFinded={setIsCepFinded}
-                      value={address.road}
-                      onChange={e => {
-                        address.road = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].number`}
-                      placeholder="Número"
-                      value={address.number}
-                      onChange={e => {
-                        address.number = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].complement`}
-                      placeholder="Complemento"
-                      value={address.complement}
-                      onChange={e => {
-                        address.complement = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <Input
-                      name={`addresses[${index}].type`}
-                      placeholder="Tipo(comercial, residencial, rural ou casa de praia)"
-                      value={address.type}
-                      onChange={e => {
-                        address.type = e.target.value
-                        const updatedAddresses = [...addresses]
-                        setAddresses(updatedAddresses)
-                      }}
-                    />
-                    <span>
-                      <CheckBox isChecked={address.is_primary_address} onClick={() => setPrimaryAddress(address.id)} />
-                      <p>Endereço Principal</p>
-                      <button type="button" onClick={() => handleRemoveAddress(address.id)}>
-                        <p>Remover Endereço</p>
-                        <MdRemove />
-                      </button>
-                    </span>
-                  </>
-                ) : (
-                  <HiddenAddress key={address.id}>
-                    <p>Endereço {index + 1}</p>
-                    <MdExpandMore onClick={() => handleExpandAddress(address.id)} />
-                  </HiddenAddress>
-                )}
-              </div>
+              <Fragment key={address.id}>
+                <HiddenAddress hasVisible={!address.isActive}>
+                  <p>Endereço {index + 1}</p>
+                  <MdExpandMore onClick={() => handleExpandAddress(address.id)} />
+                </HiddenAddress>
+
+                <AddressesContent hasVisible={address.isActive}>
+                  <InputWithMask
+                    mask="99999-999"
+                    name={`addresses[${index}].cep`}
+                    placeholder="CEP"
+                    onChange={(event) => changeCepValue({
+                      value: event.target.value,
+                      index
+                    })}
+                  />
+                  <Input
+                    name={`addresses[${index}].state`}
+                    placeholder="Estado"
+                    setIsCepFinded={setIsCepFinded}
+                    isCepFinded={isCepFinded}
+                  />
+                  <Input
+                    name={`addresses[${index}].city`}
+                    placeholder="Cidade"
+                    setIsCepFinded={setIsCepFinded}
+                    isCepFinded={isCepFinded}
+                  />
+                  <Input
+                    name={`addresses[${index}].district`}
+                    placeholder="Bairro"
+                    setIsCepFinded={setIsCepFinded}
+                    isCepFinded={isCepFinded}
+                  />
+                  <Input
+                    name={`addresses[${index}].road`}
+                    placeholder="Rua(Logradouro)"
+                    isCepFinded={isCepFinded}
+                    setIsCepFinded={setIsCepFinded}
+                  />
+                  <Input
+                    name={`addresses[${index}].number`}
+                    placeholder="Número"
+                  />
+                  <Input
+                    name={`addresses[${index}].complement`}
+                    placeholder="Complemento"
+                  />
+                  <Input
+                    name={`addresses[${index}].type`}
+                    placeholder="Tipo(comercial, residencial, rural ou casa de praia)"
+                  />
+                  <span>
+                    <CheckBox isChecked={address.is_primary_address} onClick={() => setPrimaryAddress(address.id)} />
+                    <p>Endereço Principal</p>
+                    <button type="button" onClick={() => handleRemoveAddress(address.id)}>
+                      <p>Remover Endereço</p>
+                      <MdRemove />
+                    </button>
+                  </span>
+                </AddressesContent>
+              </Fragment>
             ))}
             <button type="button" onClick={handleAddAddress}>
               <p>Adicionar Endereço</p>

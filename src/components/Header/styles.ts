@@ -12,4 +12,18 @@ export const Content = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    position: absolute;
+    right: 70px;
+    color: var(--purple-500);
+
+    &:hover {
+      cursor: pointer;
+      filter: brightness(0.8);
+    }
+  }
 `;

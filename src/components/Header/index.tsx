@@ -1,10 +1,14 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
+import { FiLogOut } from 'react-icons/fi'
+import { useAuth } from '../../hooks/auth'
 import { HeaderOption } from '../HeaderOption'
 import { ModalConfirmPath } from '../ModalConfirmPath'
 import { Container, Content } from './styles'
 
 export function Header() {
+  const { signOut } = useAuth()
+
   const [activeRoute, setActiveRoute] = useState('')
   const [confirmModalOpen, setConfirmModalOpen] = useState(false)
   const [path, setPath] = useState('')
@@ -22,6 +26,12 @@ export function Header() {
   function togglePath(path: string) {
     setPath(path)
     setConfirmModalOpen(!confirmModalOpen)
+  }
+
+  function handleSignOut() {
+    signOut()
+
+    push('/')
   }
 
   return (
@@ -44,7 +54,9 @@ export function Header() {
           onClick={() => push('/create_client')}>Criar cliente</HeaderOption>
         <HeaderOption
           isActive={activeRoute === 'manage_clients'}
-          onClick={() => pathname === '/create_client' ? togglePath('/manage_clients') : push('/manage_clients')}>Gerenciar clientes</HeaderOption>
+          onClick={() => pathname === '/create_client' ? togglePath('/manage_clients') : push('/manage_clients')}>Gerenciar clientes
+          </HeaderOption>
+          <FiLogOut onClick={handleSignOut}/>
       </Content>
     </Container>
   )

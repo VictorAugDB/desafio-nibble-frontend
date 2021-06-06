@@ -10,7 +10,7 @@ import { FiAlertCircle } from 'react-icons/fi';
 import { useField } from '@unform/core';
 import InputMask, {Props} from 'react-input-mask'
 
-import { Container, Error } from './styles';
+import { Container, InputName, Error } from './styles';
 
 interface InputProps extends Props {
   name: string;
@@ -18,6 +18,7 @@ interface InputProps extends Props {
   type?: string;
   mask: string;
   icon?: React.ComponentType<IconBaseProps>;
+  placeholder: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -26,6 +27,7 @@ const Input: React.FC<InputProps> = ({
   mask,
   containerStyle = {},
   icon: Icon,
+  placeholder,
   ...rest
 }) => {
   const inputRef = useRef(null);
@@ -63,6 +65,14 @@ const Input: React.FC<InputProps> = ({
       isFilled={isFilled}
       className='__Input'
     >
+       { isFocused || isFilled ? (
+        <InputName>
+          {placeholder}
+        </InputName>
+      ) : (
+        <></>
+      )}
+
       {Icon && <Icon size={20} />}
       <InputMask
         onFocus={handleInputFocus}
@@ -71,6 +81,7 @@ const Input: React.FC<InputProps> = ({
         type={type}
         mask={mask}
         ref={inputRef}
+        placeholder={!isFilled && !isFocused ? placeholder : ''}
         {...rest}
       />
       {error && (

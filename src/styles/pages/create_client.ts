@@ -1,6 +1,13 @@
 import { shade } from 'polished';
 import styled from 'styled-components';
 
+interface IAddressesContentProps {
+  hasVisible: boolean;
+}
+interface IHiddenAddressesProps {
+  hasVisible: boolean;
+}
+
 export const Container = styled.div`
   width: 100%;
   padding: 4rem;
@@ -66,60 +73,61 @@ export const AddressContainer = styled.div`
       text-decoration: underline;
     }
   }
+`
 
-  > div {
-    margin-top: 1rem;
+export const AddressesContent = styled.div<IAddressesContentProps>`
+  margin-top: 1rem;
+  display: ${props => props.hasVisible ? 'flex' : 'none'};
+  align-items: center;
+
+  flex-wrap: wrap;
+
+  .__Input:not(:last-of-type) {
+    margin-right: 1rem;
+  }
+
+  > span {
     display: flex;
     align-items: center;
+    flex-basis: 100%;
+    width: 0;
+    margin-top: 1rem;
 
-    flex-wrap: wrap;
-
-    .__Input:not(:last-of-type) {
-      margin-right: 1rem;
+    p {
+      margin-left: 0.5rem;
+      font-weight: 500;
     }
 
-    > span {
+    > button {
       display: flex;
       align-items: center;
-      flex-basis: 100%;
-      width: 0;
-      margin-top: 1rem;
+      background: transparent;
+      border: 0;
+      margin-left: auto;
+
+      color: var(--gray-500);
 
       p {
-        margin-left: 0.5rem;
-        font-weight: 500;
+        font-size: 1.2rem;
+        font-weight: 400;
       }
 
-      > button {
-        display: flex;
-        align-items: center;
-        background: transparent;
-        border: 0;
-        margin-left: auto;
+      svg {
+        width: 20px;
+        height: 20px;
+      }
 
-        color: var(--gray-500);
-
-        p {
-          font-size: 1.2rem;
-          font-weight: 400;
-        }
-
-        svg {
-          width: 20px;
-          height: 20px;
-        }
-
-        &:hover {
-          text-decoration: underline;
-        }
+      &:hover {
+        text-decoration: underline;
       }
     }
   }
 `
 
-export const HiddenAddress = styled.div`
-  display: flex;
+export const HiddenAddress = styled.div<IHiddenAddressesProps>`
+  display: ${props => props.hasVisible ? 'flex' : 'none'};
   align-items: center;
+  margin-top: 1rem;
 
   p {
     font-weight: 500;

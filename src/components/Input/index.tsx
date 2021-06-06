@@ -9,7 +9,7 @@ import { IconBaseProps } from 'react-icons';
 import { FiAlertCircle } from 'react-icons/fi';
 import { useField } from '@unform/core';
 
-import { Container, Error } from './styles';
+import { Container, InputName, Error } from './styles';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
@@ -17,6 +17,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   type?: string;
   icon?: React.ComponentType<IconBaseProps>;
   isCepFinded?: boolean;
+  placeholder: string;
   setIsCepFinded?: (state: boolean) => void;
 }
 
@@ -27,6 +28,7 @@ const Input: React.FC<InputProps> = ({
   icon: Icon,
   isCepFinded,
   setIsCepFinded,
+  placeholder,
   ...rest
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +55,7 @@ const Input: React.FC<InputProps> = ({
     });
   }, [fieldName, registerField]);
 
-  
+
   useEffect(() => {
     if (isCepFinded === true) {
       setIsFilled(true)
@@ -69,6 +71,13 @@ const Input: React.FC<InputProps> = ({
       isFilled={isFilled}
       className='__Input'
     >
+      { isFocused || isFilled ? (
+        <InputName>
+          {placeholder}
+        </InputName>
+      ) : (
+        <></>
+      )}
       {Icon && <Icon size={20} />}
       <input
         onFocus={handleInputFocus}
@@ -76,6 +85,7 @@ const Input: React.FC<InputProps> = ({
         defaultValue={defaultValue}
         type={type}
         ref={inputRef}
+        placeholder={!isFilled && !isFocused ? placeholder : ''}
         {...rest}
       />
       {error && (

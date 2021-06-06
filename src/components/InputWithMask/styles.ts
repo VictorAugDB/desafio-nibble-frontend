@@ -13,6 +13,7 @@ export const Container = styled.div<ContainerProps>`
   border-radius: 10px;
   padding: 16px;
   width: 100%;
+  position: relative;
 
   border: 2px solid var(--blue-500);
 
@@ -74,3 +75,24 @@ export const Error = styled(Tooltip)`
     }
   }
 `;
+
+export const InputName = styled.div`
+  @keyframes nameAnimation{
+    from {
+      top: 16px;
+      left: 16px;
+    }
+    to {
+      top: 2.5px;
+      left: 5px;
+    }
+  }
+
+  color: var(--cyan-green);
+  font-size: 0.75rem;
+
+  position: absolute;
+  top: 2.5px;
+  left: 5px;
+  animation: nameAnimation 0.3s;
+`
