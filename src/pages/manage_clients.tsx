@@ -346,6 +346,8 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     }
   });
 
+  const { data } = await api.get('/client')
+
   const clients = data.clients.map(client => (({
     ...client,
     created_at: format(
